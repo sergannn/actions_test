@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Установка Flutter и Dart
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.x"  # или конкретная версия, например "3.16.0"
+          channel: "stable"       # stable, beta, dev
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      # Проверка проекта (опционально, но полезно для CI)
+      - name: Analyze project
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+      # Сборка APK (релиз)
+      - name: Build APK
+        run: |
+          flutter build apk --release --target-platform android-arm64
+
+      # Сохранение APK как артефакта (чтобы скачать из Actions)
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/*.apk
